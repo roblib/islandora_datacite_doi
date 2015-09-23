@@ -75,7 +75,7 @@ function islandora_datacite_doi_mint_doi_ddi($object, $dsid = "DDI") {
   if (empty($response->code) || !(substr($response->code, 0, strlen($test)) === $test)) {
     throw new Exception("Failed to mint DOI for $datacite->getDOI, Error sending DOI to datacite, $response->status_message");
   }
-  $new_DDI = $datacite->updateDDI($doi, $object[$dsid]->content);
+  $new_DDI = $datacite->updateDDI($datacite->getDoi(), $object[$dsid]->content);
   if ($new_DDI === -1) {
     throw new Exception("Failed to add DOI to DDI xml");
   }
