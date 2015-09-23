@@ -1,0 +1,8 @@
+name = Islandora Datacite DOI
+description = API supplying config and functions to register and mint Datacite DOIs
+dependencies[] = islandora
+package = Islandora Tools
+version = 7.x-dev
+core = 7.x
+files[] = includes/datacite_doi.inc
+files[] = tests/datacite_doi.test

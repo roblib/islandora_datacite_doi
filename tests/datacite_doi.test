@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file
+ * Unit test for the HOCR class.
+ */
+class DataciteDoiTestCase extends DrupalWebTestCase {
+
+  public $test_pid;
+  public $prefix;
+  public $site;
+  public $testMode;
+  public $user;
+  public $password;
+  public $domain;
+  protected $dataciteConfigArray;
+
+  /**
+   * Parses and returns the settings from the test configuration file.
+   *
+   * If no install specific test_config.ini file is found, it will use the
+   * assumed default configs found in default.test_config.ini.
+   * 
+   * Not sure if we want to pull the whole islandora test suite into this yet.
+   * If we do pull it in we maybe able to get rid of this function.
+   *
+   * @return array
+   *   The test configuration.
+   *
+   * @see parse_ini_file()
+   */
+  public static function getTestConfiguration() {
+    $path = drupal_get_path('module', 'islandora_datacite_doi');
+    if (file_exists("$path/tests/test_config.ini")) {
+      return parse_ini_file("$path/tests/test_config.ini");
+    }
+    elseif (file_exists("$path/tests/default.test_config.ini")) {
+      return parse_ini_file("$path/tests/default.test_config.ini");
+    }
+    throw new Exception('Required default.test_config.ini/test_config.ini file not found');
+  }
+
+  /**
+   * Gets info to display to describe this test.
+   *
+   * @see DrupalUnitTestCase::getInfo()
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Datacite DOI Tests',
+      'description' => 'Ensure that Datacite DOI creation works.',
+      'group' => 'Islandora Tools',
+    );
+  }
+
+  /**
+   * Sets up the requirements for this test.
+   *
+   * @see DrupalUnitTestCase::setUp()
+   */
+  public function setUp() {
+    parent::setUp(array('islandora_datacite_doi'));
+    $this->dataciteConfigArray = DataciteDoiTestCase::getTestConfiguration();
+    $this->test_pid = $this->dataciteConfigArray['test_pid'];
+    $this->prefix = $this->dataciteConfigArray['prefix'];
+    $this->site = $this->dataciteConfigArray['site'];
+    $this->testMode = $this->dataciteConfigArray['test_mode'];
+    $this->user = $this->dataciteConfigArray['user'];
+    $this->password = $this->dataciteConfigArray['password'];
+    $this->domain = $this->dataciteConfigArray['domain'];
+  }
+
+  /**
+   * Test finding word coordinates and information.
+   */
+  public function testDataciteDoiUnitTests() {
+    $dataciteDoi = new DataciteDoi($this->prefix, $this->site, $this->test_pid, $this->user, $this->password);
+    $dataciteDoi->testMode = TRUE;
+    $doi = $dataciteDoi->getDoi();
+    // Test for correct DOI
+    $this->assertEqual($doi, "$this->prefix/$this->site/$this->test_pid", 'doi is correct');
+    $fixture_path = drupal_get_path('module', 'islandora_datacite_doi') . '/tests/fixtures/';
+    $input_xml = file_get_contents($fixture_path . 'DDI32_record.xml');
+    $transformed_xml = $dataciteDoi->transformDDIToDacite($input_xml, $doi);
+    $doc = new DOMDocument();
+    $doc->loadXML($transformed_xml);
+    $identifier = $doc->getElementsByTagName('identifier');
+    // Test for correct xml transform
+    $this->assertEqual($identifier->item(0)->nodeValue, $doi, 'datacite xml has correct identifier');
+    $result = $dataciteDoi->sendXmlToDatacite(trim($transformed_xml));
+    // Test registering xml with datacite
+    $this->assertEqual(substr($result->code, 0, 3), '201', 'datacite registration succeeded with return value of 201');
+    // Test minting of DOI
+    $url = url("$this->domain/islandora/object/$this->test_pid", array(
+      'language' => (object) array('language' => FALSE),
+      'absolute' => TRUE,
+    ));
+    $result = $dataciteDoi->sendDoiToDatacite($url);
+    $this->assertEqual(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content');
+    $updated_ddi = $dataciteDoi->updateDDI($doi, $input_xml);
+    $result_doi = $this->verifyDDI($updated_ddi);
+    $this->assertEqual($result_doi, $doi, 'DDI r:IdentifierContent equals doi');
+    $result = $dataciteDoi->deleteDataciteDOI();
+    $this->assertEqual(substr($result->code, 0, 3), '200', 'datacite DOI deletion succeeded with a return value of 200');
+  }
+
+  private function verifyDDI($ddi) {
+    $xml = new DOMDocument();
+    $test = $xml->loadXML($ddi);
+    $query = "//r:Citation/r:InternationalIdentifier[r:ManagingAgency/text() = 'Datacite']/r:IdentifierContent";
+    $xpath = new DOMXPath($xml);
+    $xpath->registerNamespace('r', 'ddi:reusable:3_2');
+    $results = $xpath->query($query, $xml);
+    return $results->item(0)->nodeValue;
+  }
+
+}

@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * @file
+ * Module to supply an api for creating Datacite DOIs.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function islandora_datacite_doi_menu() {
+  $items = array();
+
+  $items['admin/islandora/islandora_datacite_doi'] = array(
+    'title' => 'Islandora Datacite DOI settings',
+    'description' => 'Configure settings for the Islandora Datacite DOI module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_datacite_doi_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'includes/admin.form.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Conveinence method to register, mint a doi as well as update the source metadata stream with the DOI.
+ * 
+ * @param string $object
+ *   An Islandora AbstractObject
+ * @param string $dsid
+ *   The dsid used to retrieve metadata
+ * @param string $type
+ *   The type currently only support DDI but hope to add MODS
+ * @return int
+ *   0 for success
+ */
+function islandora_datacite_doi_mint_doi($object, $dsid, $type) {
+  if ($type != 'DDI') {
+    watchdog('islandora_datacite_doi', 'We currently do not know how to create a Datacite DOI '
+        . 'for this type of metadata - %type', array('%type' => $type), WATCHDOG_WARNING);
+    return -1;
+  }
+  try {
+    islandora_datacite_doi_mint_doi_ddi($object, $dsid);
+  } catch (Exception $e) {
+    watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, @error', array(
+      '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+    return -2;
+  }
+  return 0;
+}
+
+/**
+ * Registers and mints a datacite DOI
+ * 
+ * @param string $object
+ *   An islandora AbstractObject
+ * @param type $dsid
+ *   The dsid that holds the DDI content
+ * 
+ * @throws Exception
+ *   if registration, minting or updating the xml fails
+ */
+function islandora_datacite_doi_mint_doi_ddi($object, $dsid = "DDI") {
+  module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
+  $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
+  islandora_datacite_doi_register_ddi_doi($object, $dsid, $datacite);
+  $url = url("islandora/object/$pid", array(
+    'language' => (object) array('language' => FALSE),
+    'absolute' => TRUE,
+  ));
+  $response = $datacite->sendDoiToDatacite($url);
+  $test = '201';
+  if (empty($response->code) || !(substr($response->code, 0, strlen($test)) === $test)) {
+    throw new Exception("Failed to mint DOI for $datacite->getDOI, Error sending DOI to datacite, $response->status_message");
+  }
+  $new_DDI = $datacite->updateDDI($doi, $object[$dsid]->content);
+  if ($new_DDI === -1) {
+    throw new Exception("Failed to add DOI to DDI xml");
+  }
+  // We've updated the doi in the ddi so send it back to Fedora.
+  $object[$dsid]->setContentFromString($new_DDI);
+}
+
+/**
+ * Register datacite xml as metadata.
+ *
+ * We need to register a DOI with metadata before we can mint it.
+ *
+ * @param object $object
+ *   An Islandora object
+ * @param string $dsid
+ *   The dsid containing the metadata to crosswalk.  
+ * @param object $datacite
+ *   A DataciteDoi object
+ *
+ * @throws Exception
+ *   if there are errors transforming xml or communicating with Datacite
+ */
+function islandora_datacite_doi_register_ddi_doi($object, $dsid, $datacite) {
+  $doi = $datacite->getDoi();
+  $datacite_xml = $datacite->transformDDIToDacite($object[$dsid]->content, $doi);
+  if (empty($datacite_xml)) {
+    throw new Exception('Error transforming DDI to Datacite xml for object ' . $object->id);
+  }
+  $response = $datacite->sendXmlToDatacite($datacite_xml);
+  $test = '201';
+  if (empty($response->code) || !(substr($response->code, 0, strlen($test)) === $test)) {
+    throw new Exception("Failed to register datacite xml with $doi error connecting to datacite, $response->status_message");
+  }
+}
