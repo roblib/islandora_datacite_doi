@@ -109,7 +109,7 @@ class DataciteDoi {
    *   array on success null on failure
    */
   function sendDoiToDatacite($url) {
-    $data = sprintf("doi=%s\nurl=%s", $this->getDoi(), $url . '/' . $this->pid);
+    $data = sprintf("doi=%s\nurl=%s", $this->getDoi(), $url);
     $options = array(
       'method' => 'POST',
       'data' => $data,
