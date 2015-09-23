@@ -69,6 +69,7 @@ function islandora_datacite_doi_mint_doi_ddi($object, $dsid = "DDI") {
   $url = url("islandora/object/$pid", array(
     'language' => (object) array('language' => FALSE),
     'absolute' => TRUE,
+    'https' => variable_get('islandora_datacite_doi_use_ssl', FALSE),
   ));
   $response = $datacite->sendDoiToDatacite($url);
   $test = '201';

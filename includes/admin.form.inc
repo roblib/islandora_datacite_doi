@@ -60,6 +60,13 @@ function islandora_datacite_doi_admin_form($form, &$form_state) {
     '#description' => t('The path to saxon for xslt 2.0 tranforms.  Used to transform DDIto Datacite xml.'),
     '#required' => TRUE,
   );
+  
+  $form['islandora_datacite_doi_use_ssl'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Should Datacite use https for links back to your site'),
+    '#default_value' => variable_get('islandora_datacite_doi_use_ssl', 'FALSE'),
+    '#required' => TRUE,
+  );
 
   return system_settings_form($form);
 }
