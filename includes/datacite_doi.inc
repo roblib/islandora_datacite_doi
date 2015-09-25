@@ -45,22 +45,23 @@ class DataciteDoi {
   function getDoi() {
     return "$this->prefix/$this->site/$this->pid";
   }
-
+  
   /**
-   * Transform the DDI to Datacite xml.
-   *
-   * We use an xslt that can transform DDI3.2 to datacite 3.1
+   * Transform the MetaData XML to Datacite xml.
    *
    * @param string $xml
-   *   The ddi xml as a string
+   *   The ddi xml as a string.
    * @param string $doi
    *   The doi to register
+   * @param string $xsltFileName
+   *   The xslt file name.  This file must exist in the xslt directory.
    *
-   * @return null|string
-   *   returns the datacite xml including the doi.  Null on failure
+   * @throws Exception 
+   *   Throws an Exception if the transform fails.
    */
-  function transformDDIToDacite($xml, $doi) {
-    $xslt_path = drupal_get_path('module', 'islandora_datacite_doi') . '/xslt/ddi_3_2-datacite_3_1.xsl';
+  function transformMetadataToDacite($xml, $doi, $xsltFileName) {
+    $path = drupal_get_path('module', 'islandora_datacite_doi') . '/xslt';
+    $xslt_path = "$path/$xsltFileName";
     $datacite_path = tempnam(NULL, 'datacite');
     $input_file = tempnam(NULL, 'datacite_input');
     file_put_contents($input_file, $xml);
@@ -139,6 +140,36 @@ class DataciteDoi {
         METADATA_URI . '/' . $this->getDoi(), $options);
     return $result;
   }
+  
+  /**
+   * Update the metadata xml with the DOI.
+   * 
+   * @param string $doi
+   *   The DOI
+   * @param string $xml
+   *   The XML
+   * @param string $dsid
+   *   The objects dsid
+   * @return string
+   *   The update xml
+   * 
+   * @throws Exception
+   *   throws an exceptioin if the type of metadata is not supported.
+   */
+  function updateMetaData($doi, $xml, $dsid){
+    $returnValue = -1;
+    switch ($dsid){
+      case 'DDI':
+        $returnValue = $this->updateDDI($doi, $xml);
+        break;
+      case 'MODS':
+        $returnValue = $this->updateMODS($doi, $xml);
+        break;
+      default:
+        throw new Exception("Cannot update metadata,  $dsid is not supported.");
+    }
+    return $returnValue;
+  }
 
   /**
    * Update the DDI xml with the doi so we can send it back to Fedora.
@@ -177,6 +208,42 @@ class DataciteDoi {
       $internationalIdentifier->appendChild($managingAgency);
       $identifierContent = $xml->createElementNS("ddi:reusable:3_2", "r:IdentifierContent", $doi);
       $internationalIdentifier->appendChild($identifierContent);
+    }
+    return $xml->saveXML();
+  }
+  
+  /**
+   * Update the MODS xml with the doi so we can send it back to Fedora.
+   *
+   * @param string $doi
+   *   The doi.
+   * @param string $mods
+   *   The MODS xml
+   *
+   * @return int|string
+   *   the updated ddi xml on success or an int on failure
+   */
+  function updateMODS($doi, $mods) {
+    $xml = new DOMDocument();
+    $test = $xml->loadXML($mods);
+    if (empty($test)) {
+       return -1;
+    }
+    $query = "//mods:identifier[@type='doi']";
+    $xpath = new DOMXPath($xml);
+    $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+    $results = $xpath->query($query, $xml);
+    $found = FALSE;
+    foreach ($results as $element) {
+      $found = TRUE;
+      $element->nodeValue = $doi;
+    }
+    if (!$found) {
+      // We need to add the new identifier
+      $mods = $xml->getElementsByTagName('mods');
+      $identifier = $xml->createElementNS("http://www.loc.gov/mods/v3", "mods:identifier", $doi);
+      $identifier->setAttribute('type', 'doi');
+      $mods->item(0)->appendChild($identifier);
     }
     return $xml->saveXML();
   }

@@ -35,20 +35,36 @@ function islandora_datacite_doi_menu() {
  * @return int
  *   0 for success
  */
-function islandora_datacite_doi_mint_doi($object, $dsid, $type) {
-  if ($type != 'DDI') {
-    watchdog('islandora_datacite_doi', 'We currently do not know how to create a Datacite DOI '
-        . 'for this type of metadata - %type', array('%type' => $type), WATCHDOG_WARNING);
-    return -1;
+function islandora_datacite_doi_mint_doi($object, $dsid) {
+  $return_value = 0;
+  switch ($dsid) {
+    case "DDI":
+      $xsl_file_name = 'ddi_3_2-datacite_3_1.xsl';
+      break;
+
+    case "MODS":
+      $xsl_file_name = 'MODS-to-Datacite_3_1.xsl';
+      break;
+
+    default :
+      $xsl_file_name = NULL;
   }
-  try {
-    islandora_datacite_doi_mint_doi_ddi($object, $dsid);
-  } catch (Exception $e) {
-    watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, @error', array(
-      '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()), WATCHDOG_ERROR);
-    return -2;
+  if ($xsl_file_name) {
+    try {
+      islandora_datacite_doi_mint($object, $dsid, $xsl_file_name);
+      } catch (Exception $e) {
+      watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, @error', array(
+        '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+      $return_value = -2;
+      }
   }
-  return 0;
+  else {
+    watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, Unsupported type.', array(
+    '@object' => $object->id, '@dsid' => $dsid), WATCHDOG_ERROR);
+    $return_value = -1;
+  }
+
+  return $return_value;
 }
 
 /**
@@ -62,26 +78,36 @@ function islandora_datacite_doi_mint_doi($object, $dsid, $type) {
  * @throws Exception
  *   if registration, minting or updating the xml fails
  */
-function islandora_datacite_doi_mint_doi_ddi($object, $dsid = "DDI") {
+function islandora_datacite_doi_mint($object, $dsid = "DDI", $xslt_path) {
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
-  islandora_datacite_doi_register_ddi_doi($object, $dsid, $datacite);
-  $url = url("islandora/object/$object->id", array(
+  islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_path);
+  islandora_datacite_doi_send_doi($object->id, $datacite);
+  $new_metaData = $datacite->updateMetaData($datacite->getDoi(), $object[$dsid]->content, $dsid);
+  if ($new_metaData === -1) {
+    throw new Exception("Failed to add DOI to DDI xml");
+  }
+  // We've updated the doi in the ddi so send it back to Fedora.
+  $object[$dsid]->setContentFromString($new_metaData);
+}
+
+/**
+ * Send the url and doi to Datacite.
+ * 
+ * @param string pid
+ * @param DataciteDoi $datacite
+ * @throws Exception
+ */
+function islandora_datacite_doi_send_doi($datacite) {
+  $url = url("islandora/object/$datacite->pid", array(
     'language' => (object) array('language' => FALSE),
     'absolute' => TRUE,
     'https' => variable_get('islandora_datacite_doi_use_ssl', FALSE),
   ));
   $response = $datacite->sendDoiToDatacite($url);
-  $test = '201';
-  if (empty($response->code) || !(substr($response->code, 0, strlen($test)) === $test)) {
+  if (empty($response->code) || $response->code != '201') {
     throw new Exception("Failed to mint DOI for $datacite->getDOI, Error sending DOI to datacite, $response->status_message");
   }
-  $new_DDI = $datacite->updateDDI($datacite->getDoi(), $object[$dsid]->content);
-  if ($new_DDI === -1) {
-    throw new Exception("Failed to add DOI to DDI xml");
-  }
-  // We've updated the doi in the ddi so send it back to Fedora.
-  $object[$dsid]->setContentFromString($new_DDI);
 }
 
 /**
@@ -99,15 +125,24 @@ function islandora_datacite_doi_mint_doi_ddi($object, $dsid = "DDI") {
  * @throws Exception
  *   if there are errors transforming xml or communicating with Datacite
  */
-function islandora_datacite_doi_register_ddi_doi($object, $dsid, $datacite) {
+function islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_path) {
   $doi = $datacite->getDoi();
-  $datacite_xml = $datacite->transformDDIToDacite($object[$dsid]->content, $doi);
+  $datacite_xml = $datacite->transformMetadataToDacite($object[$dsid]->content, $doi, $xslt_path);
   if (empty($datacite_xml)) {
     throw new Exception('Error transforming DDI to Datacite xml for object ' . $object->id);
   }
   $response = $datacite->sendXmlToDatacite($datacite_xml);
-  $test = '201';
-  if (empty($response->code) || !(substr($response->code, 0, strlen($test)) === $test)) {
+  if (empty($response->code) || $response->code != '201') {
     throw new Exception("Failed to register datacite xml with $doi error connecting to datacite, $response->status_message");
   }
+}
+
+/**
+ * Make a DOI inactive on Datacite
+ * @param string $pid
+ *   An islandora object pid
+ */
+function islandora_datacite_doi_delete($pid) {
+  $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
+  $datacite->deleteDataciteDoi();
 }
