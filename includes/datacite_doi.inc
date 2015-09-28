@@ -31,8 +31,6 @@ class DataciteDoi {
     $this->datacitePass = $pass;
   }
 
-  
-
   /**
    * Create a DOI following UPEI conventions (prefix/site/pid).
    *
@@ -45,7 +43,7 @@ class DataciteDoi {
   function getDoi() {
     return "$this->prefix/$this->site/$this->pid";
   }
-  
+
   /**
    * Transform the MetaData XML to Datacite xml.
    *
@@ -120,7 +118,7 @@ class DataciteDoi {
     $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
     return $result;
   }
-  
+
   /**
    * Send a DELETE request to datacite.
    * 
@@ -136,11 +134,11 @@ class DataciteDoi {
       'timeout' => 15,
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
     );
-    $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . 
+    $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" .
         METADATA_URI . '/' . $this->getDoi(), $options);
     return $result;
   }
-  
+
   /**
    * Update the metadata xml with the DOI.
    * 
@@ -156,9 +154,9 @@ class DataciteDoi {
    * @throws Exception
    *   throws an exceptioin if the type of metadata is not supported.
    */
-  function updateMetaData($doi, $xml, $dsid){
+  function updateMetaData($doi, $xml, $dsid) {
     $returnValue = -1;
-    switch ($dsid){
+    switch ($dsid) {
       case 'DDI':
         $returnValue = $this->updateDDI($doi, $xml);
         break;
@@ -186,7 +184,7 @@ class DataciteDoi {
     $xml = new DOMDocument();
     $test = $xml->loadXML($ddi);
     if (empty($test)) {
-       return -1;
+      return -1;
     }
     $query = "//r:Citation/r:InternationalIdentifier[r:ManagingAgency/text() = 'Datacite']/r:IdentifierContent";
     $xpath = new DOMXPath($xml);
@@ -211,7 +209,7 @@ class DataciteDoi {
     }
     return $xml->saveXML();
   }
-  
+
   /**
    * Update the MODS xml with the doi so we can send it back to Fedora.
    *
@@ -227,7 +225,7 @@ class DataciteDoi {
     $xml = new DOMDocument();
     $test = $xml->loadXML($mods);
     if (empty($test)) {
-       return -1;
+      return -1;
     }
     $query = "//mods:identifier[@type='doi']";
     $xpath = new DOMXPath($xml);

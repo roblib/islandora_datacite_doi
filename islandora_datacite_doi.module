@@ -25,7 +25,14 @@ function islandora_datacite_doi_menu() {
 
 /**
  * Conveinence method to register, mint a doi as well as update the source metadata stream with the DOI.
- * 
+ * @code
+ *  function islandora_datacite_doi_islandora_object_ingested(AbstractObject $object) {
+ *    $test = islandora_datacite_doi_mint_doi($object, 'MODS');
+ *    if($test < 0){
+ *      drupal_set_message(t('Datacite DOI error, check watchdog logs for more information.'),'warning');
+ *     }
+ *   }
+ * @endcode
  * @param string $object
  *   An Islandora AbstractObject
  * @param string $dsid
@@ -60,7 +67,7 @@ function islandora_datacite_doi_mint_doi($object, $dsid) {
   }
   else {
     watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, Unsupported type.', array(
-    '@object' => $object->id, '@dsid' => $dsid), WATCHDOG_ERROR);
+      '@object' => $object->id, '@dsid' => $dsid), WATCHDOG_ERROR);
     $return_value = -1;
   }
 
@@ -82,7 +89,7 @@ function islandora_datacite_doi_mint($object, $dsid = "DDI", $xslt_path) {
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
   islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_path);
-  islandora_datacite_doi_send_doi($object->id, $datacite);
+  islandora_datacite_doi_send_doi($datacite);
   $new_metaData = $datacite->updateMetaData($datacite->getDoi(), $object[$dsid]->content, $dsid);
   if ($new_metaData === -1) {
     throw new Exception("Failed to add DOI to DDI xml");
@@ -106,7 +113,7 @@ function islandora_datacite_doi_send_doi($datacite) {
   ));
   $response = $datacite->sendDoiToDatacite($url);
   if (empty($response->code) || $response->code != '201') {
-    throw new Exception("Failed to mint DOI for $datacite->getDOI, Error sending DOI to datacite, $response->status_message");
+    throw new Exception("Failed to mint DOI for " . $datacite->getDOI() . ", Error sending DOI to datacite, $response->status_message");
   }
 }
 
