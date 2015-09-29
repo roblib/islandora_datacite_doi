@@ -93,6 +93,7 @@ class DataciteDoi {
       'data' => $datacite_xml,
       'timeout' => 15,
       'headers' => array('Content-Type' => 'application/xml'),
+      'testMode' => $this->testMode,
     );
     $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
     return $result;
@@ -114,6 +115,7 @@ class DataciteDoi {
       'data' => $data,
       'timeout' => 15,
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
+      'testMode' => $this->testMode,
     );
     $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
     return $result;
@@ -133,6 +135,7 @@ class DataciteDoi {
       'method' => 'DELETE',
       'timeout' => 15,
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
+      'testMode' => $this->testMode,
     );
     $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" .
         METADATA_URI . '/' . $this->getDoi(), $options);

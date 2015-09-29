@@ -4,21 +4,17 @@
                         xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:output media-type="text/xml" method="xml" indent="yes" encoding="UTF-8"/>
           
-    <!-- if the DOI is supplied as a parameter then use that rather than the one from the DDI-instance -->
+    <!-- if the DOI is supplied as a parameter then use that rather than the one from the MODS instance -->
     <xsl:param name="doi"/>
     <xsl:template match="/">
-        <xsl:variable name="descMetadata" select="//parent::mods:mods"/>
-        <resource xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
-                  
+        <resource xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">                  
             <identifier identifierType="DOI">
                 <xsl:choose>
                     <xsl:when test="$doi">
                         <xsl:value-of select="$doi"/>
                     </xsl:when>
-                    <xsl:otherwise>
-                        <identifier identifierType="DOI">
-                            <xsl:value-of select="//mods:mods/mods:identifier[@type='doi'][1]/text()"/>
-                        </identifier> 
+                    <xsl:otherwise>                        
+                        <xsl:value-of select="//mods:mods/mods:identifier[@type='doi'][1]/text()"/>                        
                     </xsl:otherwise>
                 </xsl:choose>
             </identifier> 
@@ -96,11 +92,6 @@
                     </format>
                 </xsl:for-each>
             </formats>
-           <!-- <xsl:if test="//mods:mods/mods:accessCondition">
-                <rights>
-                    <xsl:value-of select="//mods:mods/mods:accessCondition/text()"/>
-                </rights>
-            </xsl:if>-->
         </resource>         
     </xsl:template>
 </xsl:stylesheet>
