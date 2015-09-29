@@ -242,7 +242,7 @@ class DataciteDoi {
     if (!$found) {
       // We need to add the new identifier
       $mods = $xml->getElementsByTagName('mods');
-      $identifier = $xml->createElementNS("http://www.loc.gov/mods/v3", "mods:identifier", $doi);
+      $identifier = $xml->createElement("mods:identifier", $doi);
       $identifier->setAttribute('type', 'doi');
       $mods->item(0)->appendChild($identifier);
     }
