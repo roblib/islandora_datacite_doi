@@ -192,6 +192,6 @@ function islandora_datacite_doi_delete($pid) {
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $pid, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
   $response = $datacite->deleteDataciteDoi();
   if (empty($response->code) || $response->code != '200') {
-    throw new Exception("Failed to set $doi inactive, error connecting to datacite, $response->status_message");
+    throw new Exception("Failed to set doi inactive, It is possible this object $pid did not have a doi, $response->status_message");
   }
 }
