@@ -253,6 +253,8 @@ class DataciteDoi {
   /**
    * Adds a DDI lifecycleinformation element to an existing DDI doc.
    * 
+   * Exists here so we can add an event when we mint a DOI
+   * 
    * @param object/string $xml_doc
    *   DomDocument or an xml string
    * @param array $values
@@ -280,8 +282,14 @@ class DataciteDoi {
     }
     $study_unit = $xml_doc->getElementsByTagName('StudyUnit');
     $archive = $study_unit->item(0)->getElementsbyTagName('Archive');
-    $lifecycle_information = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleInformation");
-    $archive->item(0)->appendChild($lifecycle_information);
+    $lifecycle_information_nodes = $archive->item(0)->getElementsbyTagName('LifecycleInformation');
+    if ($lifecycle_information_nodes->length > 0) {
+      $lifecycle_information = $lifecycle_information_nodes->item(0);
+    }
+    else {
+      $lifecycle_information = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleInformation");
+      $archive->item(0)->appendChild($lifecycle_information);
+    }
     $lifecycle_event = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleEvent");
     $lifecycle_information->appendChild($lifecycle_event);
 
