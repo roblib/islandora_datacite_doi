@@ -157,14 +157,14 @@ class DataciteDoi {
    * @throws Exception
    *   throws an exceptioin if the type of metadata is not supported.
    */
-  function updateMetaData($doi, $xml, $dsid) {
+  public static function updateMetaData($doi, $xml, $dsid) {
     $returnValue = -1;
     switch ($dsid) {
       case 'DDI':
-        $returnValue = $this->updateDDI($doi, $xml);
+        $returnValue = self::updateDDI($doi, $xml);
         break;
       case 'MODS':
-        $returnValue = $this->updateMODS($doi, $xml);
+        $returnValue = self::updateMODS($doi, $xml);
         break;
       default:
         throw new Exception("Cannot update metadata,  $dsid is not supported.");
@@ -173,7 +173,8 @@ class DataciteDoi {
   }
 
   /**
-   * Update the DDI xml with the doi so we can send it back to Fedora.
+   * Update the DDI xml with the doi so we can send it back to Fedora, Also adds a DDI
+   * LifecycleEvent.
    *
    * @param string $doi
    *   The doi.
@@ -183,7 +184,7 @@ class DataciteDoi {
    * @return int|string
    *   the updated ddi xml on success or an int on failure
    */
-  function updateDDI($doi, $ddi) {
+  public static function updateDDI($doi, $ddi) {
     $xml = new DOMDocument();
     $test = $xml->loadXML($ddi);
     if (empty($test)) {
@@ -224,7 +225,7 @@ class DataciteDoi {
    * @return int|string
    *   the updated ddi xml on success or an int on failure
    */
-  function updateMODS($doi, $mods) {
+  public static function updateMODS($doi, $mods) {
     $xml = new DOMDocument();
     $test = $xml->loadXML($mods);
     if (empty($test)) {
@@ -247,6 +248,65 @@ class DataciteDoi {
       $mods->item(0)->appendChild($identifier);
     }
     return $xml->saveXML();
+  }
+
+  /**
+   * Adds a DDI lifecycleinformation element to an existing DDI doc.
+   * 
+   * @param object/string $xml_doc
+   *   DomDocument or an xml string
+   * @param array $values
+   *   this array must have certain keys
+   *   @code
+   *    $arr['agency'] = 'value';
+   *    $arr['id'] = 'value';
+   *    $arr['version']  = 'value';
+   *    $arr['type'] = 'value';
+   *    $arr['content']  = 'value';
+   *   @endcode
+   *   See the DDI spec for lifecycleInformation
+   * @return object
+   *   DomDocument
+   */
+  public static function addDDIEvent($xml_doc, $values) {
+    if (is_string($xml_doc)) {
+      $dom = new DOMDocument();
+      $test = $dom->loadXML($xml_doc);
+      $xml_doc = $dom;
+    }
+    $arg_count = extract($values, EXTR_SKIP);
+    if ($arg_count < 5) {
+      return NULL;
+    }
+    $study_unit = $xml_doc->getElementsByTagName('StudyUnit');
+    $archive = $study_unit->item(0)->getElementsbyTagName('Archive');
+    $lifecycle_information = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleInformation");
+    $archive->item(0)->appendChild($lifecycle_information);
+    $lifecycle_event = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleEvent");
+    $lifecycle_information->appendChild($lifecycle_event);
+
+    $ddi_agency = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Agency", $agency);
+    $lifecycle_event->appendChild($ddi_agency);
+
+    $ddi_id = $xml_doc->createElementNS("ddi:reusable:3_2", "r:ID", $id);
+    $lifecycle_event->appendChild($ddi_id);
+
+    $version = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Version", $version);
+    $lifecycle_event->appendChild($version);
+
+    $event_type = $xml_doc->createElementNS("ddi:reusable:3_2", "r:EventType", $type);
+    $lifecycle_event->appendChild($event_type);
+
+    $date = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Date");
+    $simple_date = $xml_doc->createElementNS("ddi:reusable:3_2", "r:SimpleDate", date('Y-m-d'));
+    $date->appendChild($simple_date);
+    $lifecycle_event->appendChild($date);
+
+    $description = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Description");
+    $content = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Content", $content);
+    $description->appendChild($content);
+    $lifecycle_event->appendChild($description);
+    return $xml_doc;
   }
 
 }

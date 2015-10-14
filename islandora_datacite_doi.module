@@ -24,9 +24,9 @@ function islandora_datacite_doi_menu() {
 }
 
 /**
- * Conveinence method to register, mint a doi as well as update the source metadata stream with the DOI.
+ * Conveinence method to register and mint a doi as well as update the source metadata stream with the DOI.
  * @code
- *  function islandora_datacite_doi_islandora_object_ingested(AbstractObject $object) {
+ *  function hook_islandora_object_ingested(AbstractObject $object) {
  *    $test = islandora_datacite_doi_mint_doi($object, 'MODS');
  *    if($test < 0){
  *      drupal_set_message(t('Datacite DOI error, check watchdog logs for more information.'),'warning');
@@ -63,6 +63,16 @@ function islandora_datacite_doi_mint_doi($object, $dsid) {
   return $return_value;
 }
 
+/**
+ * Retrieve a xslt associated with a datastream id.
+ * 
+ * The xslt should be in the modules xslt folder.
+ * 
+ * @param string $dsid
+ *   The datastream id
+ * @return string
+ *   The filename of the xslt.
+ */
 function islandora_datacite_doi_get_xslt($dsid) {
   switch ($dsid) {
     case "DDI":
