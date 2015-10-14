@@ -205,11 +205,12 @@ class DataciteDoi {
       $study_unit = $xml->getElementsByTagName('StudyUnit');
       $citation = $study_unit->item(0)->getElementsbyTagName('Citation');
       $internationalIdentifier = $xml->createElementNS("ddi:reusable:3_2", "r:InternationalIdentifier");
-      $citation->item(0)->appendChild($internationalIdentifier);
+      $copyright = $citation->item(0)->getElementsbyTagName('Copyright');
+      $citation->item(0)->insertBefore($internationalIdentifier,$copyright->item(0));
       $managingAgency = $xml->createElementNS("ddi:reusable:3_2", "r:ManagingAgency", "Datacite");
-      $internationalIdentifier->appendChild($managingAgency);
       $identifierContent = $xml->createElementNS("ddi:reusable:3_2", "r:IdentifierContent", $doi);
       $internationalIdentifier->appendChild($identifierContent);
+      $internationalIdentifier->appendChild($managingAgency);
     }
     return $xml->saveXML();
   }
