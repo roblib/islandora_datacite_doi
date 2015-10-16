@@ -312,8 +312,8 @@ class DataciteDoi {
     $lifecycle_event->appendChild($date);
 
     $description = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Description");
-    $content = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Content", $content);
-    $description->appendChild($content);
+    $content_element = $xml_doc->createElementNS("ddi:reusable:3_2", "r:Content", $content);
+    $description->appendChild($content_element);
     $lifecycle_event->appendChild($description);
     return $xml_doc;
   }
