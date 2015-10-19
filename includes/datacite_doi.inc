@@ -206,7 +206,12 @@ class DataciteDoi {
       $citation = $study_unit->item(0)->getElementsbyTagName('Citation');
       $internationalIdentifier = $xml->createElementNS("ddi:reusable:3_2", "r:InternationalIdentifier");
       $copyright = $citation->item(0)->getElementsbyTagName('Copyright');
-      $citation->item(0)->insertBefore($internationalIdentifier,$copyright->item(0));
+      if ($copyright->length > 0) {
+        $citation->item(0)->insertBefore($internationalIdentifier, $copyright->item(0));
+      }
+      else {
+        $citation->item(0)->appendChild($internationalIdentifier);
+      }
       $managingAgency = $xml->createElementNS("ddi:reusable:3_2", "r:ManagingAgency", "Datacite");
       $identifierContent = $xml->createElementNS("ddi:reusable:3_2", "r:IdentifierContent", $doi);
       $internationalIdentifier->appendChild($identifierContent);
@@ -289,7 +294,13 @@ class DataciteDoi {
     }
     else {
       $lifecycle_information = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleInformation");
-      $archive->item(0)->appendChild($lifecycle_information);
+      $otherMaterial = $archive->item(0)->getElementsbyTagName('OtherMaterial');
+      if ($otherMaterial->length > 0) {
+        $archive->item(0)->insertBefore($lifecycle_information, $otherMaterial->item(0));
+      }
+      else {
+        $archive->item(0)->appendChild($lifecycle_information);
+      }
     }
     $lifecycle_event = $xml_doc->createElementNS("ddi:reusable:3_2", "r:LifecycleEvent");
     $lifecycle_information->appendChild($lifecycle_event);
