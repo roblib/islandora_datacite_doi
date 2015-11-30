@@ -122,27 +122,36 @@ function islandora_datacite_doi_update_doi($object, $dsid) {
 
 /**
  * Registers and mints a datacite DOI
- * 
+ *
  * @param string $object
  *   An islandora AbstractObject
  * @param string $dsid
  *   The dsid that holds the DDI content
  * @param string $xslt_filename
  *   The xslt file to use.  The file must exist in this modules xslt directory.
+ * @param bool update_datastream
+ *   If true update the datastream, if false return the updated xml
  * @throws Exception
  *   if registration, minting or updating the xml fails
+ *
+ * @return string
+ *   if update_datastream == FALSE return the updated xml as a string otherwise update the islandora datastream and return NULL.
  */
-function islandora_datacite_doi_mint($object, $dsid, $xslt_filename) {
+function islandora_datacite_doi_mint($object, $dsid, $xslt_filename, $update_datastream = TRUE) {
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
   islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_filename);
   islandora_datacite_doi_send_doi($datacite);
-  $new_metaData = $datacite->updateMetaData($datacite->getDoi(), $object[$dsid]->content, $dsid);
-  if ($new_metaData === -1) {
+  $new_metadata = $datacite->updateMetaData($datacite->getDoi(), $object[$dsid]->content, $dsid);
+  if ($new_metadata === -1) {
     throw new Exception("Failed to add DOI to DDI xml");
   }
-  // We've updated the doi in the ddi so send it back to Fedora.
-  $object[$dsid]->setContentFromString($new_metaData);
+  if(update_datastream) {
+    // We've updated the doi in the ddi so send it back to Fedora.
+    $object[$dsid]->setContentFromString($new_metadata);
+  } else {
+    return $new_metadata;
+  }
 }
 
 /**
@@ -197,6 +206,7 @@ function islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_fi
  * Make a DOI inactive on Datacite
  * @param string $pid
  *   An islandora object pid
+ * @throws Exception
  */
 function islandora_datacite_doi_delete($pid) {
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $pid, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
