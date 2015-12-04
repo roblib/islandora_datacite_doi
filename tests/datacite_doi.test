@@ -102,7 +102,7 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
     ));
     $result = $dataciteDoi->sendDoiToDatacite($url);
     $this->assertEqual(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content');
-    $updated_ddi = $dataciteDoi->updateDDI($doi, $input_xml,'UPEI-ROBLIB', '1');
+    $updated_ddi = $dataciteDoi->updateDDI($doi, $input_xml, 'UPEI-ROBLIB', '1');
     $result_doi = $this->getDDIIdentifier($updated_ddi);
     $this->assertEqual($result_doi, $doi, 'DDI r:IdentifierContent equals doi');
     $result_event = $this->getDDIEvent($updated_ddi);
@@ -147,7 +147,7 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
     return $results->item(0)->nodeValue;
   }
   
-  private function getDDIEvent($ddi){
+  private function getDDIEvent($ddi) {
     $xml = new DOMDocument();
     $test = $xml->loadXML($ddi);
     $query = "//a:Archive/r:LifecycleInformation/r:LifecycleEvent/r:Agency";

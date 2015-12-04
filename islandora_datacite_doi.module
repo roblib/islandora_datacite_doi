@@ -47,7 +47,7 @@ function islandora_datacite_doi_mint_doi($object, $dsid) {
   $xsl_filename = islandora_datacite_doi_get_xslt($dsid);
   if ($xsl_filename) {
     try {
-      islandora_datacite_doi_mint($object, $dsid, $xsl_filename);
+      islandora_datacite_doi_mint($object, $dsid);
       } catch (Exception $e) {
       watchdog('islandora_datacite_doi', 'DOI Error for @object - @dsid, @error', array(
         '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()), WATCHDOG_ERROR);
@@ -121,14 +121,36 @@ function islandora_datacite_doi_update_doi($object, $dsid) {
 }
 
 /**
+ * Return the content of the specified datastream.
+ * @param AbstractObject $object
+ *   The Islandora object to fetch the content from
+ * @param string $dsid
+ *   The datastream id.
+ *
+ * @return string
+ *   A string of xml content
+ *
+ * @throws Exception
+ *   If the content of the object/datastream is empty.
+ */
+function islandora_datacite_doi_get_metadata($object, $dsid) {
+  $content = $object[$dsid]->content;
+  if (empty($content)) {
+    throw new Exception("Error loading xml metadata for $object with datastream id of $dsid");
+    }
+  return $content;
+}
+
+/**
  * Registers and mints a datacite DOI
  *
  * @param string $object
  *   An islandora AbstractObject
  * @param string $dsid
- *   The dsid that holds the DDI content
- * @param string $xslt_filename
- *   The xslt file to use.  The file must exist in this modules xslt directory.
+ *   The dsid that holds the metadata content
+ * @param string $content
+ *   The xml string to use to register the DOI.  This string is optional
+ *   if not provided it will fallback to the content of the $object[$dsid]->content
  * @param bool update_datastream
  *   If true update the datastream, if false return the updated xml
  * @throws Exception
@@ -137,19 +159,24 @@ function islandora_datacite_doi_update_doi($object, $dsid) {
  * @return string
  *   if update_datastream == FALSE return the updated xml as a string otherwise update the islandora datastream and return NULL.
  */
-function islandora_datacite_doi_mint($object, $dsid, $xslt_filename, $update_datastream = TRUE) {
+function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_datastream = TRUE) {
+  $xslt_filename = islandora_datacite_doi_get_xslt($dsid);
+  if (empty($content)) {
+    $content = islandora_datacite_doi_get_metadata($object, $dsid);
+  }
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
   $datacite = new DataciteDoi(variable_get('islandora_datacite_doi_prefix'), variable_get('islandora_datacite_doi_site'), $object->id, variable_get('islandora_datacite_doi_username'), variable_get('islandora_datacite_doi_password'));
-  islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_filename);
+  islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_filename);
   islandora_datacite_doi_send_doi($datacite);
-  $new_metadata = $datacite->updateMetaData($datacite->getDoi(), $object[$dsid]->content, $dsid);
+  $new_metadata = $datacite->updateMetaData($datacite->getDoi(), $content, $dsid);
   if ($new_metadata === -1) {
     throw new Exception("Failed to add DOI to DDI xml");
   }
-  if(update_datastream) {
+  if (update_datastream) {
     // We've updated the doi in the ddi so send it back to Fedora.
     $object[$dsid]->setContentFromString($new_metadata);
-  } else {
+  }
+  else {
     return $new_metadata;
   }
 }
@@ -178,10 +205,10 @@ function islandora_datacite_doi_send_doi($datacite) {
  *
  * We need to register a DOI with metadata before we can mint it.
  *
- * @param object $object
- *   An Islandora object
+ * @param mixed $content
+ *   An Islandora object or a String of xml.
  * @param string $dsid
- *   The dsid containing the metadata to crosswalk.  
+ *   The dsid containing the metadata to crosswalk, if $content is an Islandora object
  * @param object $datacite
  *   A DataciteDoi object
  * @param string $xslt_filename
@@ -190,11 +217,14 @@ function islandora_datacite_doi_send_doi($datacite) {
  * @throws Exception
  *   if there are errors transforming xml or communicating with Datacite
  */
-function islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xslt_filename) {
+function islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_filename) {
   $doi = $datacite->getDoi();
-  $datacite_xml = $datacite->transformMetadataToDacite($object[$dsid]->content, $doi, $xslt_filename);
+  if (gettype($content) !== "string") {
+    $content = islandora_datacite_doi_get_metadata($content, $dsid);
+  }
+  $datacite_xml = $datacite->transformMetadataToDacite($content, $doi, $xslt_filename);
   if (empty($datacite_xml)) {
-    throw new Exception('Error transforming DDI to Datacite xml for object ' . $object->id);
+    throw new Exception('Error transforming DDI to Datacite xml for DOI ' . $doi);
   }
   $response = $datacite->sendXmlToDatacite($datacite_xml);
   if (empty($response->code) || $response->code != '201') {
