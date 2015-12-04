@@ -172,7 +172,7 @@ function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_da
   if ($new_metadata === -1) {
     throw new Exception("Failed to add DOI to DDI xml");
   }
-  if (update_datastream) {
+  if ($update_datastream) {
     // We've updated the doi in the ddi so send it back to Fedora.
     $object[$dsid]->setContentFromString($new_metadata);
   }
