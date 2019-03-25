@@ -1,0 +1,7 @@
+islandora_datacite_doi.admin_form:
+  path: /admin/islandora/islandora_datacite_doi
+  defaults:
+    _title: 'Islandora Datacite DOI settings'
+    _form: \Drupal\islandora_datacite_doi\Form\IslandoraDataciteDoiAdminForm
+  requirements:
+    _permission: 'administer site configuration'

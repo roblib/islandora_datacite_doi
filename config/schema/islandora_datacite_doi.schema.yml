@@ -1,0 +1,16 @@
+islandora_datacite_doi.settings:
+  type: mapping
+  label: Settings
+  mapping:
+    islandora_datacite_doi_saxon_path:
+      type: string
+    islandora_datacite_doi_use_ssl:
+      type: string
+    islandora_datacite_doi_prefix:
+      type: string
+    islandora_datacite_doi_site:
+      type: string
+    islandora_datacite_doi_username:
+      type: string
+    islandora_datacite_doi_password:
+      type: string

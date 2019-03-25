@@ -1,0 +1,4 @@
+islandora_datacite_doi.admin_form:
+  route_name: islandora_datacite_doi.admin_form
+  title: 'Islandora Datacite DOI settings'
+  description: 'Configure settings for the Islandora Datacite DOI module.'

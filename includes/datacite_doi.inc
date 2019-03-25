@@ -63,7 +63,7 @@ class DataciteDoi {
     $datacite_path = tempnam(NULL, 'datacite');
     $input_file = tempnam(NULL, 'datacite_input');
     file_put_contents($input_file, $xml);
-    $saxon_path = variable_get('islandora_datacite_doi_saxon_path', '/opt/saxon/saxon9he.jar');
+    $saxon_path = \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_saxon_path');
     // Xslt is version 2 so use saxon to tranform
     $command = "java -jar $saxon_path -s:$input_file -xsl:$xslt_path -o:$datacite_path doi=$doi";
     $return_value = 0;
@@ -95,7 +95,15 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'application/xml'),
       'testMode' => $this->testMode,
     );
-    $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
+    // @FIXME
+// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
+// with Drupal core.
+// 
+// 
+// @see https://www.drupal.org/node/1862446
+// @see http://docs.guzzlephp.org/en/latest
+// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
+
     return $result;
   }
 
@@ -117,7 +125,15 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
       'testMode' => $this->testMode,
     );
-    $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
+    // @FIXME
+// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
+// with Drupal core.
+// 
+// 
+// @see https://www.drupal.org/node/1862446
+// @see http://docs.guzzlephp.org/en/latest
+// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
+
     return $result;
   }
 
@@ -137,8 +153,16 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
       'testMode' => $this->testMode,
     );
-    $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" .
+    // @FIXME
+// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
+// with Drupal core.
+// 
+// 
+// @see https://www.drupal.org/node/1862446
+// @see http://docs.guzzlephp.org/en/latest
+// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" .
         METADATA_URI . '/' . $this->getDoi(), $options);
+
     return $result;
   }
 
