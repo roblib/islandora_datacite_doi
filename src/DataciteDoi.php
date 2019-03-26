@@ -1,5 +1,7 @@
 <?php
 
+use GuzzleHttp\Client;
+
 /**
  * @file
  * functions used to create Datacite DOIs
@@ -17,18 +19,24 @@ class DataciteDoi {
   public $datacitePass;
 
   /**
+   * @var \GuzzleHttp\Client
+   */
+  protected $http_client;
+
+  /**
    * Instantiate a DataciteDoi object.
    *
    * @param string    *   The absolute path to the HOCR file.
    *
    * @throws InvalidArgumentException
    */
-  public function __construct($prefix, $site, $pid, $user, $pass) {
+  public function __construct($prefix, $site, $pid, $user, $pass, Client $http_client) {
     $this->prefix = $prefix;
     $this->site = $site;
     $this->pid = $pid;
     $this->dataciteUser = $user;
     $this->datacitePass = $pass;
+    $this->guzzle = $http_client;
   }
 
   /**
@@ -95,15 +103,8 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'application/xml'),
       'testMode' => $this->testMode,
     );
-    // @FIXME
-// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
-// with Drupal core.
-// 
-// 
-// @see https://www.drupal.org/node/1862446
-// @see http://docs.guzzlephp.org/en/latest
-// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
 
+    $result = $this->http_client->get("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
     return $result;
   }
 
@@ -125,14 +126,8 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
       'testMode' => $this->testMode,
     );
-    // @FIXME
-// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
-// with Drupal core.
-// 
-// 
-// @see https://www.drupal.org/node/1862446
-// @see http://docs.guzzlephp.org/en/latest
-// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
+
+    $result = $this->client->get("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
 
     return $result;
   }
@@ -153,15 +148,8 @@ class DataciteDoi {
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
       'testMode' => $this->testMode,
     );
-    // @FIXME
-// drupal_http_request() has been replaced by the Guzzle HTTP client, which is bundled
-// with Drupal core.
-// 
-// 
-// @see https://www.drupal.org/node/1862446
-// @see http://docs.guzzlephp.org/en/latest
-// $result = drupal_http_request("https://$this->dataciteUser:$this->datacitePass@" .
-        METADATA_URI . '/' . $this->getDoi(), $options);
+
+    $result = $this->http_client->get("https://$this->dataciteUser:$this->datacitePass@METADATA_URI . '/' . $this->getDoi()", $options);
 
     return $result;
   }
