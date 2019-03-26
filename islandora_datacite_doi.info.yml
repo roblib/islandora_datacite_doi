@@ -1,7 +1,5 @@
 name: 'Islandora Datacite DOI'
 description: 'API supplying config and functions to register and mint Datacite DOIs'
-dependencies:
-  islandora: 'islandora:islandora'
 package: 'Islandora Tools'
 core: 8.x
 type: module

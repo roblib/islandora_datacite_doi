@@ -63,7 +63,7 @@ class DataciteDoi {
     $datacite_path = tempnam(NULL, 'datacite');
     $input_file = tempnam(NULL, 'datacite_input');
     file_put_contents($input_file, $xml);
-    $saxon_path = \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_saxon_path');
+    $saxon_path = \Drupal::config('islandora_datacite_doi.settings')->get('saxon_path');
     // Xslt is version 2 so use saxon to tranform
     $command = "java -jar $saxon_path -s:$input_file -xsl:$xslt_path -o:$datacite_path doi=$doi";
     $return_value = 0;

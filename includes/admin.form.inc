@@ -24,14 +24,14 @@ function islandora_datacite_doi_admin_form($form, &$form_state) {
   $form['islandora_datacite_doi_prefix'] = array(
     '#type' => 'textfield',
     '#title' => t('The prefix provided by Datacite for your DOIs'),
-    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_prefix'),
+    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('prefix'),
     '#description' => t('The prefix provided by Datacite for your DOIs'),
     '#required' => TRUE,
   );
   $form['islandora_datacite_doi_site'] = array(
     '#type' => 'textfield',
     '#title' => t('The site or application name'),
-    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_site'),
+    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('site'),
     '#description' => t('A local site or application name to use in the creation of the DOI.  '
         . 'DOIs will be minted as such "prefix/site/pid" e.g. "10.11571/upei-roblib-data/pydio:25"'),
     '#required' => TRUE,
@@ -40,7 +40,7 @@ function islandora_datacite_doi_admin_form($form, &$form_state) {
   $form['islandora_datacite_doi_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Your Datacite username'),
-    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_username'),
+    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('username'),
     '#description' => t('The pydio server url and path'),
     '#required' => TRUE,
   );
@@ -48,7 +48,7 @@ function islandora_datacite_doi_admin_form($form, &$form_state) {
   $form['islandora_datacite_doi_password'] = array(
     '#type' => 'textfield',
     '#title' => t('Datacite Password'),
-    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_password'),
+    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('password'),
     '#description' => t('The password to use for Datacite'),
     '#required' => TRUE,
   );
@@ -69,7 +69,7 @@ function islandora_datacite_doi_admin_form($form, &$form_state) {
   $form['islandora_datacite_doi_use_ssl'] = array(
     '#type' => 'checkbox',
     '#title' => t('Should Datacite use https for links back to your site'),
-    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('islandora_datacite_doi_use_ssl'),
+    '#default_value' => \Drupal::config('islandora_datacite_doi.settings')->get('use_ssl'),
     '#required' => TRUE,
   );
 

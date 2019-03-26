@@ -1,6 +1,6 @@
-islandora_datacite_doi_saxon_path: /opt/saxon/saxon9he.jar
-islandora_datacite_doi_use_ssl: 'FALSE'
-islandora_datacite_doi_prefix: doi_prefix
-islandora_datacite_doi_site: site_or_application
-islandora_datacite_doi_username: datacite_username
-islandora_datacite_doi_password: 'datacite password'
+saxon_path: /opt/saxon/saxon9he.jar
+use_ssl: 'FALSE'
+prefix: doi_prefix
+site: site_or_application
+username: datacite_username
+password: 'datacite password'
