@@ -17,7 +17,7 @@ class DataciteDoi {
   public $datacitePass;
 
   /**
-   * Instantiate an DataciteDoi object.
+   * Instantiate a DataciteDoi object.
    *
    * @param string    *   The absolute path to the HOCR file.
    *

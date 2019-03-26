@@ -5,23 +5,6 @@
  * Module to supply an api for creating Datacite DOIs.
  */
 
-/**
- * Implements hook_menu().
- */
-function islandora_datacite_doi_menu() {
-  $items = array();
-
-  $items['admin/islandora/islandora_datacite_doi'] = array(
-    'title' => 'Islandora Datacite DOI settings',
-    'description' => 'Configure settings for the Islandora Datacite DOI module.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('islandora_datacite_doi_admin_form'),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'includes/admin.form.inc',
-  );
-
-  return $items;
-}
 
 /**
  * Conveinence method to register and mint a doi as well as update the source metadata stream with the DOI.
@@ -48,11 +31,11 @@ function islandora_datacite_doi_mint_doi($object, $dsid) {
   if ($xsl_filename) {
     try {
       islandora_datacite_doi_mint($object, $dsid);
-      } catch (Exception $e) {
+    } catch (Exception $e) {
       \Drupal::logger('islandora_datacite_doi')->error('DOI Error for @object - @dsid, @error', array(
         '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()));
       $return_value = -2;
-      }
+    }
   }
   else {
     \Drupal::logger('islandora_datacite_doi')->error('DOI Error for @object - @dsid, Unsupported type.', array(
@@ -104,29 +87,14 @@ function islandora_datacite_doi_update_doi($object, $dsid) {
   $xsl_filename = islandora_datacite_doi_get_xslt($dsid);
   if ($xsl_filename) {
     try {
-      // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-$datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
+
+      $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
       islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xsl_filename);
-      } catch (Exception $e) {
+    } catch (Exception $e) {
       \Drupal::logger('islandora_datacite_doi')->error('DOI Update Error for @object - @dsid, @error', array(
         '@object' => $object->id, '@dsid' => $dsid, '@error' => $e->getMessage()));
       $return_value = -2;
-      }
+    }
   }
   else {
     \Drupal::logger('islandora_datacite_doi')->error('DOI Update Error for @object - @dsid, Unsupported type.', array(
@@ -153,7 +121,7 @@ function islandora_datacite_doi_get_metadata($object, $dsid) {
   $content = $object[$dsid]->content;
   if (empty($content)) {
     throw new Exception("Error loading xml metadata for $object with datastream id of $dsid");
-    }
+  }
   return $content;
 }
 
@@ -181,23 +149,8 @@ function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_da
     $content = islandora_datacite_doi_get_metadata($object, $dsid);
   }
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-$datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
+
+  $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
   islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_filename);
   islandora_datacite_doi_send_doi($datacite);
   $new_metadata = $datacite->updateMetaData($datacite->getDoi(), $content, $dsid);
@@ -274,22 +227,7 @@ function islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_f
  * @throws Exception
  */
 function islandora_datacite_doi_delete($pid) {
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
-// @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/islandora_datacite_doi.settings.yml and config/schema/islandora_datacite_doi.schema.yml.
+
 $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $pid, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
   $response = $datacite->deleteDataciteDoi();
   if (empty($response->code) || $response->code != '200') {

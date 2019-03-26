@@ -2,15 +2,15 @@ islandora_datacite_doi.settings:
   type: mapping
   label: Settings
   mapping:
-    islandora_datacite_doi_saxon_path:
+    saxon_path:
       type: string
-    islandora_datacite_doi_use_ssl:
+    use_ssl:
       type: string
-    islandora_datacite_doi_prefix:
+    prefix:
       type: string
-    islandora_datacite_doi_site:
+    site:
       type: string
-    islandora_datacite_doi_username:
+    username:
       type: string
-    islandora_datacite_doi_password:
+    password:
       type: string
