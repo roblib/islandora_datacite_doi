@@ -5,7 +5,7 @@
  * Module to supply an api for creating Datacite DOIs.
  */
 
-
+use Drupal\islandora_datacite_do\DataciteDoi;
 /**
  * Conveinence method to register and mint a doi as well as update the source metadata stream with the DOI.
  * @code
@@ -88,7 +88,7 @@ function islandora_datacite_doi_update_doi($object, $dsid) {
   if ($xsl_filename) {
     try {
 
-      $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
+      $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'), \Drupal::httpClient());
       islandora_datacite_doi_register_doi($object, $dsid, $datacite, $xsl_filename);
     } catch (Exception $e) {
       \Drupal::logger('islandora_datacite_doi')->error('DOI Update Error for @object - @dsid, @error', array(
@@ -150,7 +150,7 @@ function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_da
   }
   module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
 
-  $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
+  $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'), \Drupal::httpClient());
   islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_filename);
   islandora_datacite_doi_send_doi($datacite);
   $new_metadata = $datacite->updateMetaData($datacite->getDoi(), $content, $dsid);
@@ -228,7 +228,7 @@ function islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_f
  */
 function islandora_datacite_doi_delete($pid) {
 
-$datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $pid, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'));
+$datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $pid, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'), \Drupal::httpClient());
   $response = $datacite->deleteDataciteDoi();
   if (empty($response->code) || $response->code != '200') {
     throw new Exception("Failed to set doi inactive, It is possible this object $pid did not have a doi, $response->status_message");
