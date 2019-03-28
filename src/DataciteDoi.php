@@ -2,6 +2,9 @@
 
 use GuzzleHttp\Client;
 
+namespace Drupal\islandora_datacite_doi;
+use GuzzleHttp\Client;
+
 /**
  * @file
  * functions used to create Datacite DOIs
@@ -31,14 +34,13 @@ class DataciteDoi
    *
    * @throws InvalidArgumentException
    */
-  public function __construct($prefix, $site, $pid, $user, $pass, Client $http_client)
+  public function __construct($prefix, $site, $user, $pass, Client $http_client)
   {
     $this->prefix = $prefix;
     $this->site = $site;
-    $this->pid = $pid;
     $this->dataciteUser = $user;
     $this->datacitePass = $pass;
-    $this->guzzle = $http_client;
+    $this->http_client = $http_client;
   }
 
   /**
