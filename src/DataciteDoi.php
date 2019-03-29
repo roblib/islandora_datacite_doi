@@ -70,14 +70,15 @@ class DataciteDoi
   function sendXmlToDatacite($datacite_xml)
   {
     $options = array(
-      'method' => 'POST',
-      'data' => $datacite_xml,
+      'body' => $datacite_xml,
       'timeout' => 15,
-      'headers' => array('Content-Type' => 'application/xml'),
+      'headers' => array('Content-Type' => 'application/xml;charset=UTF-8'),
       'testMode' => $this->testMode,
+      'auth' => [$this->dataciteUser, $this->datacitePass],
     );
 
-    $result = $this->http_client->get("https://$this->dataciteUser:$this->datacitePass@" . METADATA_URI, $options);
+    $request = $this->http_client->put("https://" . METADATA_URI . '/' . $this->prefix, $options);
+    $result = $request->getBody();
     return $result;
   }
 
