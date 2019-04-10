@@ -1,0 +1,21 @@
+{
+    "name": "drupal/islandora_datacite_doi",
+    "description": "API supplying config and functions to register and mint Datacite DOIs",
+    "type": "drupal-module",
+    "homepage": "https://github.com/roblib/islandora_datacite_doi",
+    "authors": [
+        {
+            "name": "Alexander O'Neill (alxp)",
+            "homepage": "https://www.drupal.org/u/alxp",
+            "role": "Maintainer"
+        },
+	{
+            "name": "Paul Pound (ppound)",
+	    "homepage": "https://library.upei.ca/",
+	    "role":" Maintainer"
+	}
+    ],
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev"
+}
+
