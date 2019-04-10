@@ -9,8 +9,8 @@ use GuzzleHttp\Client;
  * @file
  * functions used to create Datacite DOIs
  */
-define('METADATA_URI', 'mds.datacite.org/metadata');
-define('DOI_URI', 'mds.datacite.org/doi');
+define('METADATA_URI', 'https://mds.datacite.org/metadata');
+define('DOI_URI', 'https://mds.datacite.org/doi');
 
 class DataciteDoi
 {
@@ -21,6 +21,8 @@ class DataciteDoi
   public $testMode = FALSE;
   public $dataciteUser;
   public $datacitePass;
+  protected $datacite_xml;
+  protected $doi;
 
   /**
    * @var \GuzzleHttp\Client
@@ -34,27 +36,14 @@ class DataciteDoi
    *
    * @throws InvalidArgumentException
    */
-  public function __construct($prefix, $site, $user, $pass, Client $http_client)
+  public function __construct($prefix, $site, $user, $pass, Client $http_client, $doi = FALSE)
   {
     $this->prefix = $prefix;
     $this->site = $site;
     $this->dataciteUser = $user;
     $this->datacitePass = $pass;
+    $this->doi = $doi;
     $this->http_client = $http_client;
-  }
-
-  /**
-   * Create a DOI following UPEI conventions (prefix/site/pid).
-   *
-   * @param string pid
-   *   the pid of an islandora object
-   *
-   * @return string
-   *   return the doi
-   */
-  function getDoi()
-  {
-    return "$this->prefix/$this->site/$this->pid";
   }
 
   /**
@@ -67,8 +56,11 @@ class DataciteDoi
    * @return array|null
    *   array on success or NULL on failure
    */
-  function sendXmlToDatacite($datacite_xml)
-  {
+  function sendXmlToDatacite($datacite_xml = NULL) {
+
+    if (empty($datacite_xml) && !empty($this->datacite_xml)) {
+      $datacite_xml = $this->getDataciteXml();
+    }
     $options = array(
       'body' => $datacite_xml,
       'timeout' => 15,
@@ -77,8 +69,13 @@ class DataciteDoi
       'auth' => [$this->dataciteUser, $this->datacitePass],
     );
 
-    $request = $this->http_client->put("https://" . METADATA_URI . '/' . $this->prefix, $options);
-    $result = $request->getBody();
+    $request = $this->http_client->put(METADATA_URI . '/' . (!empty($this->doi) ? $this->doi : $this->prefix), $options);
+    $result = $request->getBody()->getContents();
+    // Extract DOI from result, which is of the form: "OK (10.5072/MDFR-5T34)'".
+    if (substr($result, 0, 4) == "OK (") {
+      $this->doi = substr($result, 4, -1);
+        return $this->doi;
+    }
     return $result;
   }
 
@@ -91,19 +88,17 @@ class DataciteDoi
    * @return array
    *   array on success null on failure
    */
-  function sendDoiToDatacite($url)
-  {
-    $data = sprintf("doi=%s\nurl=%s", $this->getDoi(), $url);
+  public function registerDoiUrl($url) {
+    $data = sprintf("doi=%s\nurl=%s\n", $this->doi, $url);
     $options = array(
-      'method' => 'POST',
-      'data' => $data,
+      'body' => $data,
       'timeout' => 15,
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
-      'testMode' => $this->testMode,
+      'auth' => [$this->dataciteUser, $this->datacitePass],
     );
 
-    $result = $this->client->get("https://$this->dataciteUser:$this->datacitePass@" . DOI_URI, $options);
-
+    $request = $this->http_client->put(DOI_URI . '/' . $this->doi, $options);
+    $result = $request->getBody()->getContents();
     return $result;
   }
 
@@ -116,17 +111,32 @@ class DataciteDoi
    * @return array
    *   array on success null on failure
    */
-  function deleteDataciteDoi()
-  {
+  function deleteDataciteDoi() {
     $options = array(
-      'method' => 'DELETE',
       'timeout' => 15,
       'headers' => array('Content-Type' => 'text/plain;charset=UTF-8'),
       'testMode' => $this->testMode,
+      'auth' => [$this->dataciteUser, $this->datacitePass],
     );
 
-    $result = $this->http_client->get("https://$this->dataciteUser:$this->datacitePass@METADATA_URI . '/' . $this->getDoi()", $options);
-
+    $request = $this->http_client->delete(METADATA_URI . '/' . $this->doi, $options);
+    $result = $request->getBody()->getContents();
     return $result;
+  }
+
+  public function getDataciteXml() {
+    return $this->datacite_xml;
+  }
+
+  public function setDataciteXml($xml) {
+    $this->datacite_xml = $xml;
+  }
+
+  public function getDoi() {
+    return $this->doi;
+  }
+
+  public function setDoi(string $doi) {
+    $this->doi = $doi;
   }
 }

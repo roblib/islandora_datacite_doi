@@ -1,3 +1,7 @@
+dependencies: 
+  enforced:
+    module:
+      - islandora_datacite_doi
 saxon_path: /opt/saxon/saxon9he.jar
 use_ssl: 'FALSE'
 prefix: doi_prefix
