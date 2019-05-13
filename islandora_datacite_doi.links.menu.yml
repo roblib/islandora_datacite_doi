@@ -1,4 +1,5 @@
 islandora_datacite_doi.admin_form:
   route_name: islandora_datacite_doi.admin_form
   title: 'Islandora Datacite DOI settings'
+  parent: system.admin_config_system
   description: 'Configure settings for the Islandora Datacite DOI module.'
