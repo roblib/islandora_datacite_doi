@@ -1,5 +1,5 @@
 {
-    "name": "roblib/islandora_datacite_doi",
+    "name": "islandora-rdm/islandora_datacite_doi",
     "description": "API supplying config and functions to register and mint Datacite DOIs",
     "type": "drupal-module",
     "homepage": "https://github.com/roblib/islandora_datacite_doi",
