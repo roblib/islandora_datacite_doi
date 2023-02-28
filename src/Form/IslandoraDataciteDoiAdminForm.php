@@ -45,7 +45,7 @@ class IslandoraDataciteDoiAdminForm extends ConfigFormBase {
     return ['islandora_datacite_doi.settings'];
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     //form_load_include($form_state, 'inc', 'islandora_pydio_bridge', 'includes/admin.form');
 
     $form = [];

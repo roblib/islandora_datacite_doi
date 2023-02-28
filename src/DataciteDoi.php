@@ -1,8 +1,7 @@
 <?php
 
-use GuzzleHttp\Client;
-
 namespace Drupal\islandora_datacite_doi;
+
 use GuzzleHttp\Client;
 
 /**

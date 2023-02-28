@@ -48,9 +48,9 @@ function islandora_datacite_doi_mint_doi($object, $dsid) {
 
 /**
  * Retrieve a xslt associated with a datastream id.
- * 
+ *
  * The xslt should be in the modules xslt folder.
- * 
+ *
  * @param string $dsid
  *   The datastream id
  * @return string
@@ -74,7 +74,7 @@ function islandora_datacite_doi_get_xslt($dsid) {
 
 /**
  * Attempts to update the datacite metadata registered with datacite.
- * 
+ *
  * @param AbstractObject $object
  *   The islandora object
  * @param string $dsid
@@ -148,7 +148,8 @@ function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_da
   if (empty($content)) {
     $content = islandora_datacite_doi_get_metadata($object, $dsid);
   }
-  module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
+  //module_load_include('inc', 'islandora_datacite_doi', 'includes/datacite_doi.inc');
+  \Drupal::moduleHandler()->loadInclude('islandora_datacite_doi', 'inc', 'includes/datacite_doi');
 
   $datacite = new DataciteDoi(\Drupal::config('islandora_datacite_doi.settings')->get('prefix'), \Drupal::config('islandora_datacite_doi.settings')->get('site'), $object->id, \Drupal::config('islandora_datacite_doi.settings')->get('username'), \Drupal::config('islandora_datacite_doi.settings')->get('password'), \Drupal::httpClient());
   islandora_datacite_doi_register_doi($content, $dsid, $datacite, $xslt_filename);
@@ -168,7 +169,7 @@ function islandora_datacite_doi_mint($object, $dsid, $content = NULL, $update_da
 
 /**
  * Send the url and doi to Datacite.
- * 
+ *
  * @param string pid
  * @param DataciteDoi $datacite
  * @throws Exception

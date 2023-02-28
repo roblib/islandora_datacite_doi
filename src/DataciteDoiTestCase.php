@@ -3,7 +3,7 @@ namespace Drupal\islandora_datacite_doi;
 
 /**
  * @file
- * Unit test for the HOCR class.
+ * Unit test for the Datacite DOI class.
  */
 class DataciteDoiTestCase extends DrupalWebTestCase {
 
@@ -21,7 +21,7 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
    *
    * If no install specific test_config.ini file is found, it will use the
    * assumed default configs found in default.test_config.ini.
-   * 
+   *
    * Not sure if we want to pull the whole islandora test suite into this yet.
    * If we do pull it in we maybe able to get rid of this function.
    *
@@ -31,7 +31,7 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
    * @see parse_ini_file()
    */
   public static function getTestConfiguration() {
-    $path = drupal_get_path('module', 'islandora_datacite_doi');
+    $path = \Drupal::service('extension.list.module')->getPath('islandora_datacite_doi');
     if (file_exists("$path/tests/test_config.ini")) {
       return parse_ini_file("$path/tests/test_config.ini");
     }
@@ -79,63 +79,63 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
     $dataciteDoi->testMode = TRUE;
     $doi = $dataciteDoi->getDoi();
     // Test for correct DOI
-    $this->assertEqual($doi, "$this->prefix/$this->site/$this->test_pid", 'doi is correct');
+    $this->assertEquals($doi, "$this->prefix/$this->site/$this->test_pid", 'doi is correct');
     $this->testDDIStuff($dataciteDoi, $doi);
     $this->testMODSStuff($dataciteDoi, $doi);
   }
 
   private function testDDIStuff($dataciteDoi, $doi) {
-    $fixture_path = drupal_get_path('module', 'islandora_datacite_doi') . '/tests/fixtures/';
+    $fixture_path = \Drupal::service('extension.list.module')->getPath('islandora_datacite_doi') . '/tests/fixtures/';
     $input_xml = file_get_contents($fixture_path . 'DDI32_record.xml');
     $transformed_xml = $dataciteDoi->transformMetadataToDacite($input_xml, $doi, 'ddi_3_2-datacite_3_1.xsl');
     $doc = new DOMDocument();
     $doc->loadXML($transformed_xml);
     $identifier = $doc->getElementsByTagName('identifier');
     // Test for correct xml transform
-    $this->assertEqual($identifier->item(0)->nodeValue, $doi, 'datacite xml has correct identifier when transformed from ddi');
+    $this->assertEquals($identifier->item(0)->nodeValue, $doi, 'datacite xml has correct identifier when transformed from ddi');
     $result = $dataciteDoi->sendXmlToDatacite(trim($transformed_xml));
     // Test registering xml with datacite
-    $this->assertEqual(substr($result->code, 0, 3), '201', 'datacite from DDI registration succeeded with return value of 201');
+    $this->assertEquals(substr($result->code, 0, 3), '201', 'datacite from DDI registration succeeded with return value of 201');
     // Test minting of DOI
     $url = url("$this->domain/islandora/object/$this->test_pid", array(
       'language' => (object) array('language' => FALSE),
       'absolute' => TRUE,
     ));
     $result = $dataciteDoi->sendDoiToDatacite($url);
-    $this->assertEqual(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content');
+    $this->assertEquals(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content');
     $updated_ddi = $dataciteDoi->updateDDI($doi, $input_xml, 'UPEI-ROBLIB', '1');
     $result_doi = $this->getDDIIdentifier($updated_ddi);
-    $this->assertEqual($result_doi, $doi, 'DDI r:IdentifierContent equals doi');
+    $this->assertEquals($result_doi, $doi, 'DDI r:IdentifierContent equals doi');
     $result_event = $this->getDDIEvent($updated_ddi);
-    $this->assertEqual($result_event, 'UPEI-ROBLIB', 'DDI lifecycleevent agency is correct');
+    $this->assertEquals($result_event, 'UPEI-ROBLIB', 'DDI lifecycleevent agency is correct');
     $result = $dataciteDoi->deleteDataciteDOI();
-    $this->assertEqual(substr($result->code, 0, 3), '200', 'datacite DOI deletion succeeded with a return value of 200');
+    $this->assertEquals(substr($result->code, 0, 3), '200', 'datacite DOI deletion succeeded with a return value of 200');
   }
 
   private function testMODSStuff($dataciteDoi, $doi) {
-    $fixture_path = drupal_get_path('module', 'islandora_datacite_doi') . '/tests/fixtures/';
+    $fixture_path = \Drupal::service('extension.list.module')->getPath('islandora_datacite_doi') . '/tests/fixtures/';
     $input_xml = file_get_contents($fixture_path . 'LOCModsSample.xml');
     $transformed_xml = $dataciteDoi->transformMetadataToDacite($input_xml, $doi, 'MODS-to-Datacite_3_1.xsl');
     $doc = new DOMDocument();
     $doc->loadXML($transformed_xml);
     $identifier = $doc->getElementsByTagName('identifier');
     // Test for correct xml transform
-    $this->assertEqual($identifier->item(0)->nodeValue, $doi, 'datacite xml has correct identifier when transformed from MODS');
+    $this->assertEquals($identifier->item(0)->nodeValue, $doi, 'datacite xml has correct identifier when transformed from MODS');
     $result = $dataciteDoi->sendXmlToDatacite(trim($transformed_xml));
     // Test registering xml with datacite
-    $this->assertEqual(substr($result->code, 0, 3), '201', 'datacite from MODS registration succeeded with return value of 201');
+    $this->assertEquals(substr($result->code, 0, 3), '201', 'datacite from MODS registration succeeded with return value of 201');
     // Test minting of DOI
     $url = url("$this->domain/islandora/object/$this->test_pid", array(
       'language' => (object) array('language' => FALSE),
       'absolute' => TRUE,
     ));
     $result = $dataciteDoi->sendDoiToDatacite($url);
-    $this->assertEqual(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content when registering MODS');
+    $this->assertEquals(strtolower($result->headers['location']), "https://" . DOI_URI . '/' . $dataciteDoi->getDoi(), 'Datacite location header exists and returns expected content when registering MODS');
     $updated_mods = $dataciteDoi->updateMODS($doi, $input_xml);
     $result_doi = $this->getMODSIdentifier($updated_mods);
-    $this->assertEqual($result_doi, $doi, 'MODS identifier equals doi');
+    $this->assertEquals($result_doi, $doi, 'MODS identifier equals doi');
     $result = $dataciteDoi->deleteDataciteDOI();
-    $this->assertEqual(substr($result->code, 0, 3), '200', 'MODS Datacite DOI deletion succeeded with a return value of 200');
+    $this->assertEquals(substr($result->code, 0, 3), '200', 'MODS Datacite DOI deletion succeeded with a return value of 200');
   }
 
   private function getDDIIdentifier($ddi) {
@@ -147,7 +147,7 @@ class DataciteDoiTestCase extends DrupalWebTestCase {
     $results = $xpath->query($query, $xml);
     return $results->item(0)->nodeValue;
   }
-  
+
   private function getDDIEvent($ddi) {
     $xml = new DOMDocument();
     $test = $xml->loadXML($ddi);
