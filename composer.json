@@ -16,6 +16,9 @@
 	}
     ],
     "license": "GPL-2.0-or-later",
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "require": {
+        "discoverygarden/dgi_actions": "^1.3"
+    }
 }
 

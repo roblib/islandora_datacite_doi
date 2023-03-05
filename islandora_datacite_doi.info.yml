@@ -1,5 +1,7 @@
 name: 'Islandora Datacite DOI'
 description: 'API supplying config and functions to register and mint Datacite DOIs'
-package: 'Islandora Tools'
+package: 'DGI Actions'
 core_version_requirement: ^8 || ^9 || ^10 || ^11
 type: module
+dependencies:
+  - dgi_actions:dgi_actions

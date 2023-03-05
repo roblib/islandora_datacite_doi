@@ -1,16 +1,29 @@
-islandora_datacite_doi.settings:
+dgi_actions.service_data_type.datacite_doi:
   type: mapping
-  label: Settings
+  label: 'Datacite DOI Service Data'
   mapping:
-    saxon_path:
-      type: string
     use_ssl:
       type: string
-    prefix:
-      type: string
-    site:
-      type: string
+      label: "Use SSL"
+      description: 'Use HTTPS'
+      description: 'Use HTTPS for links back to the site.'
+    host_doi:
+      type: uri
+      label: 'DOI Host'
+      description: 'Host address for the Datacite DOI endpoint.'
+    host_mds:
+      type: url
+      label: 'MDS Host'
+      description: 'Hostname of the Datacite Metadata Service endpoint.'
     username:
+      label: 'Username'
       type: string
+      description: 'Username of the Datacite administrator.'
     password:
+      label: 'Password'
       type: string
+      description: 'Password of the Datacite administrator.'
+    prefix:
+      label: 'Prefix'
+      type: string
+      description: 'DOI prefix attached to this instance..'
