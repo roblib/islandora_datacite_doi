@@ -66,6 +66,20 @@ class MintDataciteDOI extends MintIdentifier {
   }
 
   /**
+   * Gets the External URL of the Entity.
+   *
+   * @return string
+   *   Entity's external URL as a string.
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\Exception\UndefinedLinkTemplateException
+   */
+  public function getExternalUrl(): string {
+    return $this->entity->toUrl()->setAbsolute()->toString(TRUE)->getGeneratedUrl();
+  }
+
+
+  /**
    * {@inheritdoc}
    */
   protected function getRequestHeaders(): array {
@@ -74,6 +88,11 @@ class MintDataciteDOI extends MintIdentifier {
     ];
   }
 
+  protected function getDOIRequestHeaders(): array {
+    return [
+      'Content-Type' => 'text/plain;charset=UTF-8',
+    ];
+  }
   /**
    * {@inheritdoc}
    */
@@ -86,7 +105,12 @@ class MintDataciteDOI extends MintIdentifier {
    * @inheritDoc
    */
   protected function mint(): string {
-    return $this->getIdentifierFromResponse($this->doiMetadataRequest());
+   $doi = $this->getIdentifierFromResponse($this->doiMetadataRequest());
+   $entity = $this->getEntity();
+   if ($entity->get('status')->getString()) {
+     $this->registerDoiUrlRequest();
+   }
+   return $doi;
   }
 
   /**
@@ -106,5 +130,7 @@ class MintDataciteDOI extends MintIdentifier {
     }
     throw new BadMessageException("DOI not found in response body.");
   }
+
+
 
 }

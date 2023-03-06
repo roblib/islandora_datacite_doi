@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 
 use GuzzleHttp\Psr7\Response;
+use function DI\string;
 
 /**
  * Utilities when interacting with Datacite's DOI and Metadata Service APIs.
@@ -67,15 +68,31 @@ trait DataciteDOITrait {
     $host = rtrim($this->getIdentifier()->getServiceData()->getData()['host_mds'], '/');
 
     // If an identifier already exists, attach it to the URI to update the metadata.
-    $identifier = $this->getIdentifier();
-    $field = $identifier->get('field');
-    if (!empty($field) && $this->entity->hasField($field)) {
-      $existing_doi = $this->entity->get($field)->getString();
-    }
+    $existing_doi = $this->getDOI();
 
     $url_slug = $existing_doi ? $existing_doi : $this->getPrefix();
 
     return "{$host}/{$url_slug}";
+  }
+
+  /**
+   * Construct a URL for DOI registration.
+   * @return false|string
+   *   The registration URL, or FALSE if no DOI is set.
+   */
+  public function getDOIRegistrationUri() {
+    $host = rtrim($this->getIdentifier()->getServiceData()->getData()['host_doi'], '/');
+
+    // If an identifier already exists, attach it to the URI to update the metadata.
+    $existing_doi = $this->getDOI();
+    if (!empty($existing_doi)) {
+      return "{$host}/{$existing_doi}";
+    }
+    else {
+      // We can't register a non-existant DOI.
+      return FALSE;
+    }
+
   }
 
   protected function buildMetadataRequest() {
@@ -107,6 +124,53 @@ trait DataciteDOITrait {
 
       throw new RequestException($message, $e->getRequest(), $response, $e);
     }
+  }
+
+  protected function registerDoiUrlRequest() {
+    try {
+      $request = $this->buildDOIRequest();
+
+      return $this->sendRequest($request);
+    } catch (RequestException $e) {
+      // Wrap the exception with a bit of extra info for verbosity's sake.
+      $message = $e->getMessage();
+      $response = $e->getResponse();
+
+      throw new RequestException($message, $e->getRequest(), $response, $e);
+    }
+
+  }
+
+  public function registerDoiUrl() {
+    $request = $this->buildDOIRequest();
+    $result = $request->getBody()->getContents();
+    return $result;
+  }
+
+  /**
+   * @return mixed
+   */
+  protected function buildDOIRequest() {
+    $entity_url = $this->getExternalUrl();
+    $body = sprintf("doi=%s\nurl=%s\n", $this->getDOI(), $entity_url);
+
+    return new Request($this->getRequestType(), $this->getDOIRegistrationUri(), $this->getDOIRequestHeaders(), $body);
+  }
+
+  /**
+   * Retrieves the DOI identifier.
+   *
+   * @return string
+   *   The existing DOI for the entity
+   */
+  protected function getDOI(): string {
+    $existing_doi = '';
+    $identifier = $this->getIdentifier();
+    $field = $identifier->get('field');
+    if (!empty($field) && $this->entity->hasField($field)) {
+      $existing_doi = $this->entity->get($field)->getString();
+    }
+    return $existing_doi;
   }
 
 }
