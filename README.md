@@ -35,4 +35,4 @@ If you would like to contribute to this module, please check out our helpful [Do
 
 ## License
 
-GPL version 2 or later. See LICENSE.txt
+GPL version 3. See LICENSE.txt
