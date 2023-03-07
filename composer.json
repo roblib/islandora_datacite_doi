@@ -1,6 +1,6 @@
 {
     "name": "islandora-rdm/islandora_datacite_doi",
-    "description": "API supplying config and functions to register and mint Datacite DOIs",
+    "description": "DGI Actions Plugins to register and mint Datacite DOIs",
     "type": "drupal-module",
     "homepage": "https://github.com/roblib/islandora_datacite_doi",
     "authors": [
@@ -15,7 +15,7 @@
 	    "role":" Maintainer"
 	}
     ],
-    "license": "GPL-2.0-or-later",
+    "license": "GPL-3.0-only",
     "minimum-stability": "dev",
     "require": {
         "discoverygarden/dgi_actions": "^1.3"
