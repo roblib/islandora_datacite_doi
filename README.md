@@ -1,15 +1,13 @@
 ## Introduction
 
-Islandora Datacite DOI
-
+Islandora Datacite DOI is a set of plugins for the DGI Actions module to support
+minting of Datacite DOI identifiers via Drupal Context Actions.
 
 ## Requirements
 
 This module requires the following modules/libraries:
 
-* [Islandora](https://github.com/islandora/islandora)
-
-This module also requires Java be installed and requires access to a saxon jar file
+* [DGI Actions](https://github.com/discoverygarden/dgi_actions)
 
 ## Installation
 
@@ -17,15 +15,19 @@ Install as you would any other Drupal module.
 
 ## Configuration
 
-Visit the admin section and add your Datacite DOI prefix, username, password and path to Saxon.
+DGI Actions uses seveeral types of configuration entities that need to be set up. See the
+README.md file in that module for step-by-step instructions.
 
+This module provides the Datacite DOI Service Data Type entity type. You will need to create an
+instance of this entity with your Datacite API credentials and DOI prefix. See the
+[Datacite API guide](https://support.datacite.org/docs/mds-api-guide) for more info.
 
 ## Troubleshooting/Issues
 
 
 ## Maintainers/Sponsors
 
-Robertson Library UPEI
+[Robertson Library UPEI](https://github.com/roblib)
 
 ## Development
 
@@ -33,5 +35,4 @@ If you would like to contribute to this module, please check out our helpful [Do
 
 ## License
 
-[GPLv3](http://www.gnu.org/licenses/gpl-3.0.txt)
-
+GPL version 2 or later. See LICENSE.txt
