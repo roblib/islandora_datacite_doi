@@ -79,7 +79,8 @@ class DeleteDataciteDOI extends DeleteIdentifier {
     $requestType = $this->getRequestType();
     $uri = $this->getDOIRegistrationUri();
     $headers = $this->getRequestHeaders();
-    return new Request($requestType, $uri, $headers);
+
+    return $this->client->request($requestType, $uri, $headers);
   }
 
 
@@ -124,12 +125,4 @@ class DeleteDataciteDOI extends DeleteIdentifier {
     }
   }
 
-
-
-  /**
-   * @inheritDoc
-   */
-  protected function delete(): void {
-    // TODO: Implement delete() method.
-  }
 }
