@@ -9,7 +9,7 @@ use Drupal\dgi_actions\Plugin\ServiceDataTypeBase;
  *
  * @ServiceDataType(
  *   id = "datacite_doi",
- *   label = @Translation("Datacite DOIe"),
+ *   label = @Translation("Datacite DOI"),
  *   description = @Translation("Service information for Datacite DOIs.")
  * )
  */
@@ -35,8 +35,7 @@ class DataciteDOI extends ServiceDataTypeBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration(): array {
-    return [
-      'use_https' => TRUE,
+    return [ 
       'host_doi' => NULL,
       'host_mds' => NULL,
       'username' => NULL,
@@ -109,8 +108,7 @@ class DataciteDOI extends ServiceDataTypeBase {
     $this->configuration['password'] = !empty($form_state->getValue('password')) ? $form_state->getValue('password') : $this->configuration['password'];
     // Handle the scenario where the user did not modify the password as this
     // gets stored on the entity.
-    $form_state->setValue('password', $this->configuration['password']);
-    $this->configuration['use_https'] = $form_state->getValue('use_https');
+    $form_state->setValue('password', $this->configuration['password']); 
   }
 
 }

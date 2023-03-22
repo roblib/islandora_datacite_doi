@@ -1,12 +1,7 @@
 dgi_actions.service_data_type.datacite_doi:
   type: mapping
   label: 'Datacite DOI Service Data'
-  mapping:
-    use_ssl:
-      type: string
-      label: "Use SSL"
-      description: 'Use HTTPS'
-      description: 'Use HTTPS for links back to the site.'
+  mapping: 
     host_doi:
       type: uri
       label: 'DOI Host'
