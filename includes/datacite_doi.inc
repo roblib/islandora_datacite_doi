@@ -65,7 +65,7 @@ class DataciteDoi {
     file_put_contents($input_file, $xml);
     $saxon_path = variable_get('islandora_datacite_doi_saxon_path', '/opt/saxon/saxon9he.jar');
     // Xslt is version 2 so use saxon to tranform
-    $command = "java -jar $saxon_path -s:$input_file -xsl:$xslt_path -o:$datacite_path doi=$doi";
+    $command = "/opt/java/bin/java -jar $saxon_path -s:$input_file -xsl:$xslt_path -o:$datacite_path doi=$doi";
     $return_value = 0;
     exec($command, $output, $return_value);
     if (!empty($return_value)) {
