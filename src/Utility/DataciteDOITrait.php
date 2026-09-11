@@ -115,11 +115,16 @@ trait DataciteDOITrait {
    *   The child element name.
    * @param mixed $value
    *   The text content, or NULL for a container element with no text.
+   * @param bool $htmlEscape
+   *   Set TRUE for fields DataCite treats as HTML (e.g. descriptions). DataCite
+   *   sanitizes those as HTML fragments, stripping tags and HTML-encoding
+   *   "&", "<" and ">". Escaping one extra HTML layer here means DataCite's
+   *   sanitizer decodes it back, so the stored value matches Drupal exactly.
    *
    * @return \SimpleXMLElement
    *   The new child element, so attributes can be chained onto it.
    */
-  protected function addEscapedChild(\SimpleXMLElement $parent, string $name, $value = NULL): \SimpleXMLElement {
+  protected function addEscapedChild(\SimpleXMLElement $parent, string $name, $value = NULL, bool $htmlEscape = FALSE): \SimpleXMLElement {
     // Container elements (e.g. <creators>) have no text to escape.
     if ($value === NULL) {
       return $parent->addChild($name);
@@ -132,6 +137,12 @@ trait DataciteDOITrait {
     // back to the original string if the value isn't valid UTF-8.
     $text = preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $text) ?? $text;
 
+    // Layer 1 (optional): HTML escaping, undone by DataCite's sanitizer.
+    if ($htmlEscape) {
+      $text = htmlspecialchars($text, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    // Layer 2: XML escaping, undone by DataCite's XML parser.
     return $parent->addChild($name, htmlspecialchars($text, ENT_XML1 | ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'));
   }
 
@@ -201,7 +212,8 @@ trait DataciteDOITrait {
     // main title (titleType is omitted, matching DataCite's convention).
     $titles = $this->addEscapedChild($body, 'titles');
     foreach ($data["datacite.titles"] as $t) {
-      $title = $this->addEscapedChild($titles, 'title', $t['value']);
+      // DataCite sanitizes titles as HTML, so add the extra layer.
+      $title = $this->addEscapedChild($titles, 'title', $t['value'], TRUE);
       if (!empty($t['title_type'])) {
         $title->addAttribute('titleType', $t['title_type']);
       }
@@ -239,7 +251,8 @@ trait DataciteDOITrait {
     if (array_key_exists("datacite.subject", $data)) {
       $subjects = $this->addEscapedChild($body, 'subjects');
       foreach ($data["datacite.subject"] as $subject) {
-        $subject = $this->addEscapedChild($subjects, 'subject', $subject["value"]);
+        // DataCite sanitizes subjects as HTML, so add the extra layer.
+        $subject = $this->addEscapedChild($subjects, 'subject', $subject["value"], TRUE);
       }
     }
 
@@ -382,7 +395,8 @@ trait DataciteDOITrait {
     if (array_key_exists("datacite.descriptions", $data) && !empty($data["datacite.descriptions"])) {
       $descriptions = $this->addEscapedChild($body, 'descriptions');
       foreach ($data["datacite.descriptions"] as $desc) {
-        $this->addEscapedChild($descriptions, 'description', $desc['value'])->addAttribute('descriptionType', $desc['description_type']);
+        // DataCite sanitizes descriptions as HTML, so add the extra layer.
+        $this->addEscapedChild($descriptions, 'description', $desc['value'], TRUE)->addAttribute('descriptionType', $desc['description_type']);
       }
     }
 
@@ -468,7 +482,8 @@ trait DataciteDOITrait {
         }
         if (!empty($ri['title'])) {
           $riTitles = $this->addEscapedChild($relatedItem, 'titles');
-          $this->addEscapedChild($riTitles, 'title', $ri['title']);
+          // DataCite sanitizes related item titles as HTML, so add the extra layer.
+          $this->addEscapedChild($riTitles, 'title', $ri['title'], TRUE);
         }
         if (!empty($ri['publication_year'])) {
           $this->addEscapedChild($relatedItem, 'publicationYear', $ri['publication_year']);
