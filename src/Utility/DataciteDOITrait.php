@@ -7,9 +7,6 @@ use Drupal\dgi_actions\Plugin\Action\HttpActionTrait;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 
-use GuzzleHttp\Psr7\Response;
-use function DI\string;
-
 /**
  * Utilities when interacting with Datacite's DOI and Metadata Service APIs.
  */
@@ -81,7 +78,7 @@ trait DataciteDOITrait {
    *   The registration URL, or FALSE if no DOI is set.
    */
   public function getDOIRegistrationUri() {
-    $host = getDOIHost();
+    $host = $this->getDOIHost();
 
     // If an identifier already exists, attach it to the URI to update the metadata.
     $existing_doi = $this->getDOI();
@@ -243,7 +240,7 @@ trait DataciteDOITrait {
     if (!in_array($rtypeGeneral, $availableTypes)) {
       $rtypeGeneral = "Other";
     }
-    $this->addEscapedChild($body, 'resourceType', $data["datacite.rtype"][0]["value"])->addAttribute('resourceTypeGeneral', $rtypeGeneral);
+    $this->addEscapedChild($body, 'resourceType', $data["datacite.rtype"][0]["value"] ?? NULL)->addAttribute('resourceTypeGeneral', $rtypeGeneral);
 
     // The following fields are all optional for Datacite.
 
@@ -265,7 +262,9 @@ trait DataciteDOITrait {
     if (array_key_exists("datacite.contributors", $data)) {
       foreach ($data["datacite.contributors"] as $c) {
         $fixedContributor = $this->addEscapedChild($contributors, 'contributor');
-        $fixedContributor->addAttribute('contributorType', $c['contributor_type']);
+        // contributorType is required by DataCite, so fall back to "Other"
+        // rather than losing the contributor if no type was selected.
+        $fixedContributor->addAttribute('contributorType', ($c['contributor_type'] ?? '') ?: 'Other');
         $fixedContributorName = $this->addEscapedChild($fixedContributor, 'contributorName', $c['value']);
         if (!empty($c['name_type'])) {
           $fixedContributorName->addAttribute('nameType', $c['name_type']);
@@ -408,7 +407,9 @@ trait DataciteDOITrait {
         if (!empty($geo['place'])) {
           $this->addEscapedChild($geoLocation, 'geoLocationPlace', $geo['place']);
         }
-        if (!empty($geo['latitude']) && !empty($geo['longitude'])) {
+        // Check for blank rather than empty(), so 0 (the equator or prime
+        // meridian) is still a valid coordinate.
+        if (isset($geo['latitude'], $geo['longitude']) && $geo['latitude'] !== '' && $geo['longitude'] !== '') {
           $point = $this->addEscapedChild($geoLocation, 'geoLocationPoint');
           $this->addEscapedChild($point, 'pointLatitude', $geo['latitude']);
           $this->addEscapedChild($point, 'pointLongitude', $geo['longitude']);
@@ -432,7 +433,9 @@ trait DataciteDOITrait {
         $fundingReference = $this->addEscapedChild($fundingReferences, 'fundingReference');
         $this->addEscapedChild($fundingReference, 'funderName', $funder["value"]);
         if (!empty($funder['identifier'])) {
-          $funderIdentifierType = $funder['identifier_type'] ?: 'Other';
+          // funderIdentifierType is required by DataCite, so fall back to
+          // "Other" rather than losing the identifier if no type was selected.
+          $funderIdentifierType = ($funder['identifier_type'] ?? '') ?: 'Other';
           $funderIdentifier = $this->addEscapedChild($fundingReference, 'funderIdentifier', $funder['identifier']);
           $funderIdentifier->addAttribute('funderIdentifierType', $funderIdentifierType);
           if (!empty($funderSchemeUris[$funderIdentifierType])) {
@@ -524,7 +527,10 @@ trait DataciteDOITrait {
                 continue;
               }
               $riContributor = $this->addEscapedChild($riContributorsEl, 'contributor');
-              $riContributor->addAttribute('contributorType', $ri['contributor_type'] ?: 'Other');
+              // contributorType is required by DataCite, so fall back to
+              // "Other" rather than losing the contributor if no type was
+              // selected.
+              $riContributor->addAttribute('contributorType', ($ri['contributor_type'] ?? '') ?: 'Other');
               $riContributorName = $this->addEscapedChild($riContributor, 'contributorName', $contributorName);
               // nameType is optional; only set it if the admin configured one.
               if (!empty($ri['contributors_name_type'])) {
@@ -564,7 +570,7 @@ trait DataciteDOITrait {
   }
 
   /**
-   * @{@inheritdoc }
+   * {@inheritdoc}
    */
   protected function getRequestParams(): array {
     return [
